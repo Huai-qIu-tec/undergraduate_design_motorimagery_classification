@@ -1,0 +1,3 @@
+from .CNNTransformer import EEGCNNTransformer
+from .Spatial_Temporal_Attention import SpatialTemporalAttention
+from  .CNNTransformer_notransformer import EEGCNN_notransformer
