@@ -68,11 +68,11 @@ def cam(data, sub):
 mean_all_list = []
 mean_cam_list = []
 info_list = []
-for j in range(9):
+for j in range(1):
     nSub = j + 1
     train_test = True  # train True test False
 
-    for i in range(4):
+    for i in range(1):
 
 
         target_category = i  # set the class (class activation mapping)
@@ -96,15 +96,15 @@ for j in range(9):
         mean_cam_list.append(mean_hyb_all)
         info_list.append(info)
 
-    # fig, axes = plt.subplots(2, 4, figsize=(10, 6))
-    #
-    # for i in range(4):
-    #     mne.viz.plot_topomap(mean_all_list[i], info_list[i], show=False, axes=axes[0, i], res=1200)
-    #     mne.viz.plot_topomap(mean_cam_list[i], info_list[i], show=False, axes=axes[1, i], res=1200)
+    fig, axes = plt.subplots(2, 4, figsize=(10, 6))
+
+    for i in range(4):
+        mne.viz.plot_topomap(mean_all_list[i], info_list[i], show=False, axes=axes[0, i], res=1200)
+        mne.viz.plot_topomap(mean_cam_list[i], info_list[i], show=False, axes=axes[1, i], res=1200)
 
     import pandas as pd
 
 pd.DataFrame(mean_cam_list).to_excel('cam_22channels.xlsx')
-# fig.tight_layout()
-# plt.savefig('../../pic/需要用的图/sub%d四个类别的加权地形图.svg' % nSub, dpi=600)
-# plt.show()
+fig.tight_layout()
+plt.savefig('../../pic/需要用的图/sub%d四个类别的加权地形图.svg' % nSub, dpi=600)
+plt.show()
