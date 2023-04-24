@@ -1,0 +1,3 @@
+# undergraduate_design_motorimagcy_classication
+本科毕业设计，基于Transformer的运动想象脑电信号分类，采用CNN+Transformer框架，CNN提取局部时间空间特征，Transformer提取全局依赖
+创新点加入了Grad-CAM对脑电地形图进行可视化
