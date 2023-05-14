@@ -2,8 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 
+
+plt.style.use('seaborn')
 plt.rcParams['font.family'] = ['sans-serif']
 plt.rcParams['font.sans-serif'] = ['SimHei']
+facecolor = ["#3276B1", "#001F3F", "#800000"]
+
 
 '''
     卷积核参数敏感度检验
@@ -11,6 +15,7 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 
 
 plt.figure(figsize=(12, 9))
+plt.grid(True)
 
 x = [20, 40, 60, 80, 100, 150, 200]
 y = np.array([[84.48, 85.22, 84.35, 82.61, 83.48],
@@ -23,9 +28,10 @@ y = np.array([[84.48, 85.22, 84.35, 82.61, 83.48],
 
 plt.subplot(221)
 plt.boxplot(y.T, patch_artist=True, showmeans=True,
-            boxprops={"facecolor": "cadetblue",
+            boxprops={"facecolor": facecolor[0],
                       "edgecolor": "grey",
-                      "linewidth": 0.5},
+                      "linewidth": 0.5,
+                      "alpha": 0.75},
             medianprops={"color": "k", "linewidth": 0.5},
             meanprops={'marker': '+',
                        'markerfacecolor': 'k',
@@ -63,9 +69,10 @@ y = [[84.48, 86.96, 85.22, 80.87, 83.48],
 
 plt.subplot(222)
 plt.boxplot(y, patch_artist=True, showmeans=True,
-            boxprops={"facecolor": "slategray",
+            boxprops={"facecolor": facecolor[1],
                       "edgecolor": "grey",
-                      "linewidth": 0.5},
+                      "linewidth": 0.5,
+                      "alpha": 0.75},
             medianprops={"color": "k", "linewidth": 0.5},
             meanprops={'marker': '+',
                        'markerfacecolor': 'k',
@@ -105,9 +112,10 @@ y = [[87.07, 86.96, 85.22, 83.48, 80.87],
 
 plt.subplot(212)
 plt.boxplot(y, patch_artist=True, showmeans=True,
-            boxprops={"facecolor": "steelblue",
+            boxprops={"facecolor": facecolor[2],
                       "edgecolor": "grey",
-                      "linewidth": 0.5},
+                      "linewidth": 0.5,
+                      "alpha": 0.75},
             medianprops={"color": "k", "linewidth": 0.5},
             meanprops={'marker': '+',
                        'markerfacecolor': 'k',
@@ -118,7 +126,7 @@ plt.xticks(range(1, len(y)+1), x, fontsize=12)
 plt.yticks(fontsize=12)
 plt.ylabel('准确率', fontsize=12)
 plt.xlabel('Transformer模块数量', fontsize=12)
-# plt.tight_layout()
+plt.tight_layout()
 plt.savefig('../../pic/需要用的图/transformer参数敏感度检验.svg', dpi=600)
 
 plt.show()

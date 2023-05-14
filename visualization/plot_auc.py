@@ -2,6 +2,9 @@ import os
 from sklearn.preprocessing import OneHotEncoder
 import pylab as plt
 import warnings
+import sys
+sys.path.append("../model")
+sys.path.append("../tools")
 from utils import load_data
 from CNNTransformer import EEGCNNTransformer
 import numpy as np
@@ -10,7 +13,7 @@ warnings.filterwarnings('ignore')
 from torch.nn.functional import softmax
 from sklearn.metrics import roc_curve, auc
 from scipy import interp
-from itertools import cycle
+
 
 # 画图部分
 plt.figure()
@@ -27,12 +30,13 @@ for i in range(9):
     batch_size = 72
     root = '../../数据集/BCICIV_2a_mat/'
     train_loader, test_loader, train_num, test_num, _, _ = load_data(root, sub_num=nSub, batch_size=batch_size, training=False)
-    model_state_dict = '../model_state_dict/CNNTransformer_aug_sub%d.pth' % nSub
-    net = EEGCNNTransformer(channels=61).cuda()
+    model_state_dict = '../model_state_dict/conformer/conformer_sub%d.pth' % nSub
+    net = EEGCNNTransformer(channels=20).cuda()
     net.eval()
     if os.path.exists(model_state_dict):
-        state_dict = torch.load(model_state_dict)
-        net.load_state_dict(state_dict)
+        checkpoint = torch.load(model_state_dict)
+        model_state_dict = checkpoint['model_state_dict']
+        net.load_state_dict(model_state_dict)
 
     with torch.no_grad():
         for signals, labels in test_loader:
@@ -93,8 +97,9 @@ for i in range(9):
 plt.plot([0, 1], [0, 1], 'k--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate', fontsize=15)
+plt.ylabel('True Positive Rate', fontsize=15)
 plt.legend(loc="lower right")
-plt.savefig('AllSub_roc.png', dpi=600)
+plt.tight_layout()
+plt.savefig('../../pic/需要用的图/AllSub_roc.svg')
 plt.show()
