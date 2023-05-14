@@ -12,7 +12,7 @@ sys.path.append(r'E:\_undergraduate design\source code\model')
 sys.path.append(r'E:\_undergraduate design\source code\tools')
 from CNNTransformer import EEGCNNTransformer
 from utils import load_data, show_heatmaps
-
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 def predict(net, predict_data, true_label, num_layers, num_heads, num_queries, sub):
     net.cpu()
@@ -37,7 +37,7 @@ root = '../../数据集/BCICIV_2a_mat/'
 batch_size = 288
 net = EEGCNNTransformer(channels=20)
 diagonal_weights = []
-target_category = 3
+target_category = 0
 for i in range(9):
     print('sub %d' % (i + 1))
     nSub = i + 1
@@ -63,11 +63,13 @@ diagonal_weights = pd.DataFrame(diagonal_weights,
 
 # sns.set_theme(style="whitegrid",font='TFlux Regular',font_scale=1)
 plt.figure(figsize=(9, 4))
-sns.heatmap(data=diagonal_weights, vmin=0.05, vmax=0.054, cmap="YlGn", linewidths=3)
+scaler = MinMaxScaler()
+
+sns.heatmap(data=diagonal_weights, vmin=0, vmax=1, cmap="YlGn", linewidths=3)
 plt.xlabel('时间段', fontsize=12)
 plt.ylabel('被试者编号', fontsize=12)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
+plt.xticks(np.arange(1, 21, 1))
+plt.yticks(np.arange(1, 10, 1))
 
 plt.tight_layout()
 plt.savefig('../../pic/需要用的图/类别' + str(target_category+1) + '时间段热力图.svg', dpi=600)

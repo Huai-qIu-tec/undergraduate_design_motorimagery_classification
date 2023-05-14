@@ -1,18 +1,13 @@
 import sys
-
-import PIL.Image
 import gradio as gr
 import random
-import cv2
 import mne
 import numpy as np
 import torch
-from PIL.Image import Image
 from einops import rearrange
 from matplotlib import pyplot as plt
 from scipy import io
-import io as ios
-
+import seaborn as sns
 from model.CNNTransformer import EEGCNNTransformer
 from tools.utils import load_data
 
@@ -50,20 +45,24 @@ def show_pic(sub, trail):
     test_all_data = io.loadmat(root + 'A0' + str(sub) + 'E.mat')
     test_signals = test_all_data['data'].astype(np.float32)
     samples = test_signals[int(trail), :, :]
-    ch_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
-                '20', '21', '22']  # 通道名称
-    sfreq = 250  # 采样率
-    info = mne.create_info(ch_names, sfreq, ch_types='eeg')  # 创建信号的信息
-    raw = mne.io.RawArray(samples, info)
-    # 绘制 EEG 信号图
-    fig = raw.plot(scalings={"eeg": 1}, show_scrollbars=False, show=False)
+    Colors = ['darkred', 'navy', 'darkgreen', 'slategray', 'purple']
+
+    # 设置画布大小
+    fig = plt.figure(figsize=(25, 15))
+
+    # 去掉横坐标和纵坐标
+    plt.axis('off')
+
+    # 绘制22个通道的波形图，每个通道颜色不同
+
+    for i in range(22):
+        color = random.choice(Colors)
+        plt.plot(samples[i] - i * 15, color=color, linewidth=1)
+        plt.subplots_adjust(hspace=0.5)
 
     plt.tight_layout()
 
-    fig.savefig('demo_pic/%d_%d_eeg.png' % (int(sub), int(trail)), dpi=150)
-    img = PIL.Image.open('demo_pic/%d_%d_eeg.png' % (int(sub), int(trail)))
-
-    return img
+    return fig
 
 
 def show_cam_pic(sub, number, cam_num=1):
@@ -122,23 +121,68 @@ def show_cam_pic(sub, number, cam_num=1):
     mne.viz.plot_topomap(mean_hyb_all, evoked.info, show=False, axes=axes, res=1200)
     plt.tight_layout()
 
-    fig.savefig('demo_pic/%d_%d_cam.png' % (int(sub), int(number)), dpi=300)
-    img = PIL.Image.open('demo_pic/%d_%d_cam.png' % (int(sub), int(number)))
+    return fig
 
-    return img
+
+def show_time_pic(sub, number):
+    root = '../数据集/BCICIV_2a_mat/'
+    model = EEGCNNTransformer(channels=20)
+    checkpoint_dir = './model_state_dict/conformer/conformer_sub%d.pth' % int(sub)
+
+    # 导入模型训练参数
+    checkpoint = torch.load(checkpoint_dir, map_location=torch.device('cpu'))
+    model_state_dict = checkpoint['model_state_dict']
+    model.load_state_dict(model_state_dict)
+
+    _, _, _, _, test_data, test_labels = load_data(root, sub_num=sub, batch_size=288, training=True)
+
+    model.eval()
+    data = test_data[int(number), :, :, :].unsqueeze(0)
+    model(data)
+
+    attention_weigths = torch.cat(
+        [i.reshape((1, -1, 20, 20)).mean(dim=0) for i in model.transformer.attention_weights],
+        dim=0).reshape((6, 10, -1, 20))
+
+    weights = torch.mean(attention_weigths, dim=[0, 1])
+    diagonal_weights = [weights[i, i].detach().numpy() for i in range(20)]
+
+    min_weight, max_weight = min(diagonal_weights), max(diagonal_weights)
+    diagonal_weights = np.expand_dims(np.array(diagonal_weights), axis=0)
+
+    fig = plt.figure(figsize=(10, 4))
+
+    sns.heatmap(data=diagonal_weights, vmin=min_weight, vmax=max_weight, cmap="YlGn", linewidths=3)
+    plt.xlabel('time period', fontsize=12)
+    plt.xticks(np.arange(1, 21, 1))
+    plt.axvline(x=5, color='k', linestyle='--')
+    plt.axvline(x=10, color='k', linestyle='--')
+    plt.axvline(x=15, color='k', linestyle='--')
+    plt.axvline(x=20, color='k', linestyle='--')
+    plt.text(1.5, 0, 'cue(1s)', color='k')
+    plt.text(5.5, 0, 'motor imaging(2s)', color='k')
+    plt.text(10.5, 0, 'motor imaging(3s)', color='k')
+    plt.text(15.5, 0, 'motor imaging(4s)', color='k')
+    return fig
+
+
 
 with gr.Blocks() as classify_demo:
-    gr.Markdown("<center><span style='font-size:50px;'>运动想象脑电信号分类器</span></<center>>")
+    gr.Markdown("<center><span style='font-size:30px;'>基于Transformer的运动想象脑电信号分类器</span></<center>")
     with gr.Row():
         with gr.Box():
             with gr.Column():
-                sub_input = gr.Textbox(label="被试者编号")
-                trail_input = gr.Textbox(label="试验编号")
-                block_number = gr.Textbox(label="地形图展示层数")
-                outputs = gr.Image()
-                outputs.style(height=500)
-            with gr.Column(scale=1):
+                sub_input = gr.Slider(1, 9, label="被试者编号(1-9)", step=1)
+                trail_input = gr.Slider(1, 288, label="试验编号(1-288)", step=1)
+                block_number = gr.Slider(1, 6, label="地形图展示层数(1-6)", step=1)
+                outputs = gr.Plot()
                 show_button = gr.Button("显示脑电信号")
+
+                time_outputs = gr.Plot()
+                show_time_outputs = gr.Button("显示时间激活图")
+                # outputs.style(height=500)
+
+
 
         show_button.click(fn=show_pic, inputs=[sub_input, trail_input], outputs=[outputs])
 
@@ -147,12 +191,13 @@ with gr.Blocks() as classify_demo:
                 label = gr.Label(num_top_classes=4)
                 true_label = gr.Textbox(label="真实标签")
                 predict_button = gr.Button("预测")
-                cam_outputs = gr.Image()
-                cam_outputs.style(height=350)
-                show_cam_button = gr.Button("显示地形图")
 
+                cam_outputs = gr.Plot()
+
+                show_cam_button = gr.Button("显示地形图")
 
         predict_button.click(fn=predict, inputs=[sub_input, trail_input], outputs=[label, true_label])
         show_cam_button.click(fn=show_cam_pic, inputs=[sub_input, trail_input, block_number], outputs=cam_outputs)
+        show_time_outputs.click(fn=show_time_pic, inputs=[sub_input, trail_input], outputs=time_outputs)
 
 classify_demo.launch(share=True, server_port=8080)
