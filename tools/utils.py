@@ -165,11 +165,11 @@ def show_heatmaps(matrices, xlabel, ylabel, titles=None, figsize=(2.5, 2.5), cma
         for j, (ax, matrix) in enumerate(zip(row_axes, row_matrices)):
             pcm = ax.imshow(d2l.numpy(matrix), cmap=cmap)
             if i == num_rows - 1:
-                ax.set_xlabel(xlabel, fontsize=25)
+                ax.set_xlabel(xlabel, fontsize=10)
             if j == 0:
-                ax.set_ylabel(ylabel, fontsize=25)
+                ax.set_ylabel(ylabel, fontsize=10)
             if titles:
-                ax.set_title(titles[j], fontsize=25)
+                ax.set_title(titles[j], fontsize=10)
     fig.colorbar(pcm, ax=axes, shrink=0.6)
     if channel_attention:
         x_major_locator = MultipleLocator(1)
